@@ -1,0 +1,21 @@
+#!/system/bin/sh
+
+export PATH="/data/adb/magisk:/data/adb/ksu/bin:$PATH:/data/data/com.termux/files/usr/bin"
+
+scripts=$(realpath $0)
+scripts_dir=$(dirname ${scripts})
+
+source ${scripts_dir}/box.config
+
+while [[ "${box_daemon}" == "enabled" ]]; do
+  if bin_pid=$(busybox pidof ${bin_name}); then
+    bin_mem=$(cat /proc/${bin_pid}/status | grep -w VmRSS | awk '{print $2}')
+    if [[ -n "${box_max_memory}" && "${bin_mem}" -ge $(test -n "${bin_max_memory}" && echo "${bin_max_memory}" || echo "300000") ]]; then
+      if [[ "${box_notify}" == "enabled" ]]; then
+        $(command -v su) shell -c "cmd notification post -t Box4Magisk box4 sing-box\ exception,\ restarting"
+      fi
+      ${scripts_dir}/box.service restart
+    fi
+  fi
+  sleep $(test -n "${box_daemon_interval}" && echo "${box_daemon_interval}" || echo "10")
+done
