@@ -211,12 +211,44 @@ stop_service() {
   rm -f ${pid_file} >> /dev/null 2>&1
 }
 
+display_daemon_status(){
+  if daemon_pid=$(busybox pidof box.daemon); then
+    log Info "daemon service is running. ( PID: ${daemon_pid} )"
+    return
+  else
+    log Warn "daemon service is stopped."
+    return 1
+  fi
+}
+
+start_daemon(){
+  if display_daemon_status >/dev/null; then
+    log Info "daemon service is running."
+  else
+    ${scripts_dir}/box.daemon & 2>&1 >/dev/null
+    jobs -p > ${run_path}/daemon.pid
+    log Info "daemon service is running."
+  fi
+}
+
+stop_daemon(){
+  if daemon_pid=$(busybox pidof box.daemon); then
+    kill "${daemon_pid}"
+    rm ${run_path}/daemon.pid
+    log Warn "daemon service is stopped."
+  else
+    log Warn "daemon service is stopped."
+  fi
+}
+
 case "$1" in
   start)
     display_bin_status || start_service
+    start_daemon
     ;;
   stop)
     stop_service
+    stop_daemon
     ;;
   restart)
     stop_service
@@ -225,6 +257,7 @@ case "$1" in
     ;;
   status)
     display_bin_status
+    display_daemon_status
     ;;
   *)
     log Error "$0 $1 usage: $0 {start|stop|restart|status}"

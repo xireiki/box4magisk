@@ -13,7 +13,7 @@
 
 ## 安装
 
-- 从 [Release](https://github.com/CHIZI-0618/box4magisk/releases) 页下载模块压缩包，然后通过 Magisk Manager 或 KernelSU Manager 安装
+- 从 [Release](https://github.com/xireiki/box4magisk/releases) 页下载模块压缩包，然后通过 Magisk Manager 或 KernelSU Manager 安装
 - 支持后续在 Magisk Manager 中在线更新模块（更新后免重启即生效）
 - 更新模块时会备份用户配置，且附加用户配置至新 `/data/adb/box/scripts/box.config` 文件（在 shell 中，后定义的变量值会覆盖之前的定义值，但仍建议更新模块后再次编辑 `box.config` 文件去除重复定义与移除废弃字段）
 
@@ -151,4 +151,4 @@
 
 ## 项目 Star 数增长趋势图
 
-[![Stargazers over time](https://starchart.cc/CHIZI-0618/box4magisk.svg)](https://starchart.cc/CHIZI-0618/box4magisk)
+[![Stargazers over time](https://starchart.cc/xireiki/box4magisk.svg)](https://starchart.cc/xireiki/box4magisk)
