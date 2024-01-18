@@ -225,9 +225,9 @@ start_daemon(){
   if display_daemon_status >/dev/null; then
     log Info "daemon service is running."
   else
-    ${scripts_dir}/box.daemon & 2>&1 >/dev/null
+    nohup ${scripts_dir}/box.daemon 2>&1 >/dev/null &
     jobs -p > ${run_path}/daemon.pid
-    log Info "daemon service is running."
+    log Info "daemon service is running ( PID: $(cat ${run_path}/daemon.pid) )."
   fi
 }
 
