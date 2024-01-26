@@ -440,6 +440,30 @@ enable_ipv6() {
   echo 0 > /proc/sys/net/ipv6/conf/wlan0/disable_ipv6
 }
 
+start_cobmode() {
+  # enable apMode
+  iptables -w 100 -I FORWARD -o "${tun_name}" -j ACCEPT
+  iptables -w 100 -I FORWARD -i "${tun_name}" -j ACCEPT
+  ip6tables -w 100 -I FORWARD -i "${tun_name}" -j ACCEPT
+  ip6tables -w 100 -I FORWARD -o "${tun_name}" -j ACCEPT
+
+  # enable Compatibility Mode
+  ip rule add from all iif "${tun_name}" lookup main suppress_prefixlength 0 pref 8000
+  ip rule add lookup main pref 7000
+}
+
+stop_cobmode() {
+  # disable apMode
+  iptables -w 100 -D FORWARD -o "${tun_name}" -j ACCEPT
+  iptables -w 100 -D FORWARD -i "${tun_name}" -j ACCEPT
+  ip6tables -w 100 -D FORWARD -i "${tun_name}" -j ACCEPT
+  ip6tables -w 100 -D FORWARD -o "${tun_name}" -j ACCEPT
+
+  # disable Compatibility Mode
+  ip rule del pref 8000
+  ip rule del pref 7000
+}
+
 if [ "${proxy_mode}" = "core" ] ; then
   iptables="iptables -w 100" && stop_tproxy >> /dev/null 2>&1
   iptables="ip6tables -w 100" && stop_tproxy >> /dev/null 2>&1
@@ -490,6 +514,7 @@ case "$1" in
       iptables="iptables -w 100"
       start_redirect && log Info "create iptables transparent proxy rules done." || (log Error "create iptables transparent proxy rules failed." && stop_redirect >> /dev/null 2>&1)
       [ "${ipv6}" = "enable" ] && enable_ipv6 && log Warn "enable IPv6." || (disable_ipv6 && log Warn "disable IPv6.")
+      [ "${APCompatibilityMode}" = "enable" ] && start_cobmode && log Info "enable compatibility mode."
     fi
     ;;
   disable)
@@ -501,6 +526,7 @@ case "$1" in
     log Warn "clean up ip(6)tables transparent proxy rules done."
     enable_ipv6
     log Warn "enable IPv6."
+    [ "${APCompatibilityMode}" = "enable" ] && stop_cobmode && log Warn "disable compatibility mode."
     return 0
     ;;
   renew)
@@ -509,6 +535,7 @@ case "$1" in
     iptables="ip6tables -w 100" && stop_tproxy >> /dev/null 2>&1
     iptables="iptables -w 100" && stop_redirect >> /dev/null 2>&1
     log Warn "clean up ip(6)tables transparent proxy rules done."
+    [ "${APCompatibilityMode}" = "enable" ] && stop_cobmode && log Warn "disable compatibility mode."
     sleep 3
     if ! probe_user_group ; then
       log Error "failed to check Box user group, please make sure ${bin_name} core is started."
@@ -547,6 +574,7 @@ case "$1" in
       start_redirect && log Info "create iptables transparent proxy rules done." || (log Error "create iptables transparent proxy rules failed." && stop_redirect >> /dev/null 2>&1)
       [ "${ipv6}" = "enable" ] && enable_ipv6 && log Warn "enable IPv6." || (disable_ipv6 && log Warn "disable IPv6.")
     fi
+    [ "${APCompatibilityMode}" = "enable" ] && start_cobmode && log Info "enable compatibility mode."
     ;;
   enable_ipv6)
     enable_ipv6
